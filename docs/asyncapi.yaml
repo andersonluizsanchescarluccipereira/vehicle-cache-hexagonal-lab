@@ -1,0 +1,71 @@
+asyncapi: '3.0.0'
+id: 'urn:br:lab:vehicle-cache:event-api'
+info:
+  title: Vehicle Cache Lab — Redis Streams
+  version: '1.0.0'
+  description: >-
+    Contrato de eventos assíncronos. O produtor publica registros no Redis Stream
+    a partir do transactional outbox do PostgreSQL. O consumidor de auditoria
+    usa XREADGROUP e XACK. Entrega pelo menos uma vez, logo processe pelo eventId
+    idempotentemente. Redis Streams não é Redis Pub/Sub.
+  license:
+    name: MIT
+servers:
+  redisLocal:
+    host: 'localhost:6380'
+    protocol: redis
+    protocolVersion: '7'
+    description: Redis na porta publicada pelo compose, acesso a partir da máquina host.
+channels:
+  vehicleEvents:
+    address: 'stream:veiculos'
+    description: Stream Redis de eventos de criação, atualização e exclusão de veículos.
+    messages:
+      vehicleChanged:
+        $ref: '#/components/messages/VehicleChanged'
+operations:
+  publishVehicleChanged:
+    action: send
+    channel:
+      $ref: '#/channels/vehicleEvents'
+    messages:
+      - $ref: '#/channels/vehicleEvents/messages/vehicleChanged'
+  consumeVehicleChanged:
+    action: receive
+    channel:
+      $ref: '#/channels/vehicleEvents'
+    messages:
+      - $ref: '#/channels/vehicleEvents/messages/vehicleChanged'
+components:
+  messages:
+    VehicleChanged:
+      name: VehicleChanged
+      title: Evento persistido em Redis Stream
+      contentType: application/json
+      summary: Campos do map do XADD. O campo payload carrega JSON serializado como string.
+      payload:
+        type: object
+        additionalProperties: false
+        required: [eventId, type, vehicleId, occurredAt, payload]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum: [vehicle.created, vehicle.updated, vehicle.deleted]
+          vehicleId:
+            type: string
+            description: ID serializado no map do Redis Stream.
+          occurredAt:
+            type: string
+            format: date-time
+          payload:
+            type: string
+            description: JSON serializado de Vehicle (id, marca, modelo, ano, valor, version).
+        examples:
+          - eventId: 'c95c845b-4bdb-4651-9742-518466dfbe5e'
+            type: vehicle.created
+            vehicleId: '1001'
+            occurredAt: '2026-11-02T15:00:00Z'
+            payload: '{"id":1001,"marca":"Toyota","modelo":"Corolla","ano":2024,"valor":125000.00,"version":0}'

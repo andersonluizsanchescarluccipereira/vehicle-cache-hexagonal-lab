@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: vehicle-cache-lab
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/vehicledb}
+    username: ${SPRING_DATASOURCE_USERNAME:vehicle}
+    password: ${SPRING_DATASOURCE_PASSWORD:vehicle_dev_password}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6380}
+      timeout: 2s
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+lab:
+  cache:
+    ttl: ${LAB_CACHE_TTL:PT2M}
+  events:
+    stream: stream:veiculos
+    group: grupo-auditoria
+    consumer:
+      enabled: ${LAB_EVENTS_CONSUMER_ENABLED:true}
+      name: audit-worker-1
+    relay:
+      fixed-delay-ms: 5000
+      initial-delay-ms: 3000
+server:
+  shutdown: graceful

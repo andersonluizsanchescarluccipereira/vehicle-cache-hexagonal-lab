@@ -1,0 +1,101 @@
+
+name: vehicle-cache-lab
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vehicledb}
+      POSTGRES_USER: ${POSTGRES_USER:-vehicle}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vehicle_dev_password}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks:
+      - lab
+
+  redis:
+    image: redis:7.4-alpine
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 128mb
+      - --maxmemory-policy
+      - noeviction
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks:
+      - lab
+
+  api:
+    build: .
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-vehicledb}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-vehicle}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-vehicle_dev_password}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      LAB_CACHE_TTL: ${LAB_CACHE_TTL:-PT2M}
+      LAB_EVENTS_CONSUMER_ENABLED: ${LAB_EVENTS_CONSUMER_ENABLED:-true}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lab
+
+  k6:
+    image: grafana/k6:0.56.0
+    profiles:
+      - loadtest
+    environment:
+      BASE_URL: http://api:8080/api/v1/veiculos
+      VEHICLE_ID: ${VEHICLE_ID:-1}
+    volumes:
+      - ./tests/k6:/scripts:ro
+    entrypoint:
+      - k6
+      - run
+      - /scripts/cache.js
+    depends_on:
+      - api
+    networks:
+      - lab
+
+  structurizr:
+    image: structurizr/structurizr
+    command: ["local"]
+    profiles:
+      - docs
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - ./docs/c4:/usr/local/structurizr
+    networks:
+      - lab
+    restart: "no"
+
+networks:
+  lab: {}
+
+volumes:
+  postgres_data: {}
+  redis_data: {}

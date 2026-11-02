@@ -1,0 +1,86 @@
+openapi: 3.0.3
+info:
+  title: Vehicle Cache Lab — HTTP API
+  version: '1.0.0'
+  description: API didática de cache distribuído com arquitetura hexagonal.
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/v1/veiculos:
+    post:
+      summary: Cria veículo, outbox no mesmo commit e sincronização de cache após commit.
+      operationId: createVehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VehicleRequest' }
+      responses:
+        '201':
+          description: Criado
+          headers:
+            Location: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Vehicle' }
+        '400': { description: Validação falhou }
+  /api/v1/veiculos/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema: { type: integer, format: int64 }
+    get:
+      summary: Cache-Aside com hit, miss e fallback.
+      operationId: getVehicle
+      responses:
+        '200':
+          description: Encontrado
+          headers:
+            X-Cache:
+              description: HIT, MISS ou BYPASS
+              schema: { type: string, enum: [HIT, MISS, BYPASS] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Vehicle' }
+        '404': { description: Não encontrado }
+    put:
+      summary: Atualiza PostgreSQL e depois do commit atualiza Redis.
+      operationId: updateVehicle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VehicleRequest' }
+      responses:
+        '200':
+          description: Atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Vehicle' }
+        '404': { description: Não encontrado }
+        '409': { description: Atualização concorrente }
+    delete:
+      summary: Exclui do PostgreSQL e invalida cache após commit.
+      operationId: deleteVehicle
+      responses:
+        '204': { description: Excluído }
+        '404': { description: Não encontrado }
+components:
+  schemas:
+    VehicleRequest:
+      type: object
+      required: [marca, modelo, ano, valor]
+      properties:
+        marca: { type: string, minLength: 1, maxLength: 100 }
+        modelo: { type: string, minLength: 1, maxLength: 100 }
+        ano: { type: integer, minimum: 1900, maximum: 2100 }
+        valor: { type: number, minimum: 0.01 }
+    Vehicle:
+      allOf:
+        - $ref: '#/components/schemas/VehicleRequest'
+        - type: object
+          required: [id, version]
+          properties:
+            id: { type: integer, format: int64 }
+            version: { type: integer, format: int64 }

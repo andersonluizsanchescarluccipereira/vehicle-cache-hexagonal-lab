@@ -1,0 +1,407 @@
+{
+  "configuration" : { },
+  "description" : "C1 Contexto, C2 Containers e C3 Componentes da API Hexagonal",
+  "documentation" : { },
+  "id" : 1,
+  "lastModifiedDate" : "2026-11-02T21:42:49Z",
+  "model" : {
+    "people" : [ {
+      "description" : "Pessoa ou script curl que consome a API.",
+      "id" : "1",
+      "name" : "Cliente HTTP",
+      "properties" : {
+        "structurizr.dsl.identifier" : "developer"
+      },
+      "relationships" : [ {
+        "description" : "HTTP/JSON",
+        "destinationId" : "3",
+        "id" : "13",
+        "sourceId" : "1",
+        "tags" : "Relationship"
+      }, {
+        "description" : "HTTP/JSON",
+        "destinationId" : "2",
+        "id" : "14",
+        "linkedRelationshipId" : "13",
+        "sourceId" : "1"
+      }, {
+        "description" : "POST/GET/PUT/DELETE",
+        "destinationId" : "4",
+        "id" : "17",
+        "sourceId" : "1",
+        "tags" : "Relationship"
+      } ],
+      "tags" : "Element,Person"
+    } ],
+    "softwareSystems" : [ {
+      "containers" : [ {
+        "components" : [ {
+          "description" : "VehicleController / JSON e validacao",
+          "documentation" : { },
+          "id" : "4",
+          "name" : "REST Adapter",
+          "properties" : {
+            "structurizr.dsl.identifier" : "rest"
+          },
+          "relationships" : [ {
+            "description" : "Invoca porta de entrada",
+            "destinationId" : "5",
+            "id" : "18",
+            "sourceId" : "4",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring MVC"
+        }, {
+          "description" : "VehicleService: regras e portas",
+          "documentation" : { },
+          "id" : "5",
+          "name" : "Use Cases",
+          "properties" : {
+            "structurizr.dsl.identifier" : "service"
+          },
+          "relationships" : [ {
+            "description" : "Portas VehicleRepository e EventOutbox",
+            "destinationId" : "6",
+            "id" : "19",
+            "sourceId" : "5",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Consulta via VehicleCachePort",
+            "destinationId" : "8",
+            "id" : "20",
+            "sourceId" : "5",
+            "tags" : "Relationship"
+          }, {
+            "description" : "Registra sincronizacao pos-commit",
+            "destinationId" : "7",
+            "id" : "21",
+            "sourceId" : "5",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Java"
+        }, {
+          "description" : "JpaAdapter + JdbcOutboxAdapter",
+          "documentation" : { },
+          "id" : "6",
+          "name" : "Persistence Adapter",
+          "properties" : {
+            "structurizr.dsl.identifier" : "persistence"
+          },
+          "relationships" : [ {
+            "description" : "Persistencia e outbox na mesma transacao",
+            "destinationId" : "11",
+            "id" : "23",
+            "sourceId" : "6",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "JPA / JDBC"
+        }, {
+          "description" : "Atualizacao e invalidacao do cache apos commit",
+          "documentation" : { },
+          "id" : "7",
+          "name" : "Post-Commit Cache Sync",
+          "properties" : {
+            "structurizr.dsl.identifier" : "cacheSync"
+          },
+          "relationships" : [ {
+            "description" : "SET/DEL apos commit",
+            "destinationId" : "8",
+            "id" : "22",
+            "sourceId" : "7",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring Transaction Events"
+        }, {
+          "description" : "RedisVehicleCacheAdapter",
+          "documentation" : { },
+          "id" : "8",
+          "name" : "Cache Adapter",
+          "properties" : {
+            "structurizr.dsl.identifier" : "cache"
+          },
+          "relationships" : [ {
+            "description" : "GET/SET/DEL",
+            "destinationId" : "12",
+            "id" : "24",
+            "sourceId" : "8",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring Data Redis"
+        }, {
+          "description" : "Publicacao XADD a partir do outbox",
+          "documentation" : { },
+          "id" : "9",
+          "name" : "Outbox Relay",
+          "properties" : {
+            "structurizr.dsl.identifier" : "relay"
+          },
+          "relationships" : [ {
+            "description" : "Le eventos pendentes e marca publicados",
+            "destinationId" : "11",
+            "id" : "25",
+            "sourceId" : "9",
+            "tags" : "Relationship"
+          }, {
+            "description" : "XADD",
+            "destinationId" : "12",
+            "id" : "26",
+            "sourceId" : "9",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "JdbcTemplate / Redis"
+        }, {
+          "description" : "XREADGROUP e XACK",
+          "documentation" : { },
+          "id" : "10",
+          "name" : "Stream Audit Consumer",
+          "properties" : {
+            "structurizr.dsl.identifier" : "auditor"
+          },
+          "relationships" : [ {
+            "description" : "XREADGROUP / XACK",
+            "destinationId" : "12",
+            "id" : "27",
+            "sourceId" : "10",
+            "tags" : "Relationship"
+          } ],
+          "tags" : "Element,Component",
+          "technology" : "Spring Data Redis"
+        } ],
+        "description" : "REST, Cache-Aside, Write-Through, Outbox e consumer",
+        "documentation" : { },
+        "id" : "3",
+        "name" : "Vehicle API",
+        "properties" : {
+          "structurizr.dsl.identifier" : "api"
+        },
+        "relationships" : [ {
+          "description" : "SQL/JDBC",
+          "destinationId" : "11",
+          "id" : "15",
+          "sourceId" : "3",
+          "tags" : "Relationship"
+        }, {
+          "description" : "GET/SET/DEL, XADD, XREADGROUP, XACK",
+          "destinationId" : "12",
+          "id" : "16",
+          "sourceId" : "3",
+          "tags" : "Relationship"
+        } ],
+        "tags" : "Element,Container",
+        "technology" : "Java 21 / Spring Boot"
+      }, {
+        "description" : "Veiculos e Outbox transacional",
+        "documentation" : { },
+        "id" : "11",
+        "name" : "PostgreSQL",
+        "properties" : {
+          "structurizr.dsl.identifier" : "pg"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "PostgreSQL 17"
+      }, {
+        "description" : "Cache com TTL e Redis Streams",
+        "documentation" : { },
+        "id" : "12",
+        "name" : "Redis",
+        "properties" : {
+          "structurizr.dsl.identifier" : "redis"
+        },
+        "tags" : "Element,Container,Database",
+        "technology" : "Redis 7"
+      } ],
+      "description" : "Laboratorio de cache e mensageria com arquitetura hexagonal.",
+      "documentation" : { },
+      "id" : "2",
+      "name" : "Vehicle Cache Lab",
+      "properties" : {
+        "structurizr.dsl.identifier" : "vehicleSystem"
+      },
+      "tags" : "Element,Software System"
+    } ]
+  },
+  "name" : "Vehicle Cache Lab - C4 Model",
+  "properties" : {
+    "structurizr.inspection.error" : "18",
+    "structurizr.dsl" : "CndvcmtzcGFjZSAiVmVoaWNsZSBDYWNoZSBMYWIgLSBDNCBNb2RlbCIgIkMxIENvbnRleHRvLCBDMiBDb250YWluZXJzIGUgQzMgQ29tcG9uZW50ZXMgZGEgQVBJIEhleGFnb25hbCIgewoKICAgIG1vZGVsIHsKICAgICAgICBkZXZlbG9wZXIgPSBwZXJzb24gIkNsaWVudGUgSFRUUCIgIlBlc3NvYSBvdSBzY3JpcHQgY3VybCBxdWUgY29uc29tZSBhIEFQSS4iCgogICAgICAgIHZlaGljbGVTeXN0ZW0gPSBzb2Z0d2FyZVN5c3RlbSAiVmVoaWNsZSBDYWNoZSBMYWIiICJMYWJvcmF0b3JpbyBkZSBjYWNoZSBlIG1lbnNhZ2VyaWEgY29tIGFycXVpdGV0dXJhIGhleGFnb25hbC4iIHsKCiAgICAgICAgICAgIGFwaSA9IGNvbnRhaW5lciAiVmVoaWNsZSBBUEkiICJSRVNULCBDYWNoZS1Bc2lkZSwgV3JpdGUtVGhyb3VnaCwgT3V0Ym94IGUgY29uc3VtZXIiICJKYXZhIDIxIC8gU3ByaW5nIEJvb3QiIHsKICAgICAgICAgICAgICAgIHJlc3QgPSBjb21wb25lbnQgIlJFU1QgQWRhcHRlciIgIlZlaGljbGVDb250cm9sbGVyIC8gSlNPTiBlIHZhbGlkYWNhbyIgIlNwcmluZyBNVkMiCiAgICAgICAgICAgICAgICBzZXJ2aWNlID0gY29tcG9uZW50ICJVc2UgQ2FzZXMiICJWZWhpY2xlU2VydmljZTogcmVncmFzIGUgcG9ydGFzIiAiSmF2YSIKICAgICAgICAgICAgICAgIHBlcnNpc3RlbmNlID0gY29tcG9uZW50ICJQZXJzaXN0ZW5jZSBBZGFwdGVyIiAiSnBhQWRhcHRlciArIEpkYmNPdXRib3hBZGFwdGVyIiAiSlBBIC8gSkRCQyIKICAgICAgICAgICAgICAgIGNhY2hlU3luYyA9IGNvbXBvbmVudCAiUG9zdC1Db21taXQgQ2FjaGUgU3luYyIgIkF0dWFsaXphY2FvIGUgaW52YWxpZGFjYW8gZG8gY2FjaGUgYXBvcyBjb21taXQiICJTcHJpbmcgVHJhbnNhY3Rpb24gRXZlbnRzIgogICAgICAgICAgICAgICAgY2FjaGUgPSBjb21wb25lbnQgIkNhY2hlIEFkYXB0ZXIiICJSZWRpc1ZlaGljbGVDYWNoZUFkYXB0ZXIiICJTcHJpbmcgRGF0YSBSZWRpcyIKICAgICAgICAgICAgICAgIHJlbGF5ID0gY29tcG9uZW50ICJPdXRib3ggUmVsYXkiICJQdWJsaWNhY2FvIFhBREQgYSBwYXJ0aXIgZG8gb3V0Ym94IiAiSmRiY1RlbXBsYXRlIC8gUmVkaXMiCiAgICAgICAgICAgICAgICBhdWRpdG9yID0gY29tcG9uZW50ICJTdHJlYW0gQXVkaXQgQ29uc3VtZXIiICJYUkVBREdST1VQIGUgWEFDSyIgIlNwcmluZyBEYXRhIFJlZGlzIgogICAgICAgICAgICB9CgogICAgICAgICAgICBwZyA9IGNvbnRhaW5lciAiUG9zdGdyZVNRTCIgIlZlaWN1bG9zIGUgT3V0Ym94IHRyYW5zYWNpb25hbCIgIlBvc3RncmVTUUwgMTciICJEYXRhYmFzZSIKICAgICAgICAgICAgcmVkaXMgPSBjb250YWluZXIgIlJlZGlzIiAiQ2FjaGUgY29tIFRUTCBlIFJlZGlzIFN0cmVhbXMiICJSZWRpcyA3IiAiRGF0YWJhc2UiCiAgICAgICAgfQoKICAgICAgICBkZXZlbG9wZXIgLT4gYXBpICJIVFRQL0pTT04iCiAgICAgICAgYXBpIC0+IHBnICJTUUwvSkRCQyIKICAgICAgICBhcGkgLT4gcmVkaXMgIkdFVC9TRVQvREVMLCBYQURELCBYUkVBREdST1VQLCBYQUNLIgoKICAgICAgICBkZXZlbG9wZXIgLT4gcmVzdCAiUE9TVC9HRVQvUFVUL0RFTEVURSIKICAgICAgICByZXN0IC0+IHNlcnZpY2UgIkludm9jYSBwb3J0YSBkZSBlbnRyYWRhIgoKICAgICAgICBzZXJ2aWNlIC0+IHBlcnNpc3RlbmNlICJQb3J0YXMgVmVoaWNsZVJlcG9zaXRvcnkgZSBFdmVudE91dGJveCIKICAgICAgICBzZXJ2aWNlIC0+IGNhY2hlICJDb25zdWx0YSB2aWEgVmVoaWNsZUNhY2hlUG9ydCIKICAgICAgICBzZXJ2aWNlIC0+IGNhY2hlU3luYyAiUmVnaXN0cmEgc2luY3Jvbml6YWNhbyBwb3MtY29tbWl0IgoKICAgICAgICBjYWNoZVN5bmMgLT4gY2FjaGUgIlNFVC9ERUwgYXBvcyBjb21taXQiCiAgICAgICAgcGVyc2lzdGVuY2UgLT4gcGcgIlBlcnNpc3RlbmNpYSBlIG91dGJveCBuYSBtZXNtYSB0cmFuc2FjYW8iCgogICAgICAgIGNhY2hlIC0+IHJlZGlzICJHRVQvU0VUL0RFTCIKICAgICAgICByZWxheSAtPiBwZyAiTGUgZXZlbnRvcyBwZW5kZW50ZXMgZSBtYXJjYSBwdWJsaWNhZG9zIgogICAgICAgIHJlbGF5IC0+IHJlZGlzICJYQUREIgogICAgICAgIGF1ZGl0b3IgLT4gcmVkaXMgIlhSRUFER1JPVVAgLyBYQUNLIgogICAgfQoKICAgIHZpZXdzIHsKICAgICAgICBzeXN0ZW1Db250ZXh0IHZlaGljbGVTeXN0ZW0gIkMxX0NvbnRleHRvIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0IGxyCiAgICAgICAgfQoKICAgICAgICBjb250YWluZXIgdmVoaWNsZVN5c3RlbSAiQzJfQ29udGFpbmVycyIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b0xheW91dCBscgogICAgICAgIH0KCiAgICAgICAgY29tcG9uZW50IGFwaSAiQzNfQ29tcG9uZW50ZXMiIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9MYXlvdXQgbHIKICAgICAgICB9CgogICAgICAgIHN0eWxlcyB7CiAgICAgICAgICAgIGVsZW1lbnQgIlBlcnNvbiIgewogICAgICAgICAgICAgICAgYmFja2dyb3VuZCAjMDg0MjdiCiAgICAgICAgICAgICAgICBjb2xvciAjZmZmZmZmCiAgICAgICAgICAgICAgICBzaGFwZSBQZXJzb24KICAgICAgICAgICAgfQoKICAgICAgICAgICAgZWxlbWVudCAiU29mdHdhcmUgU3lzdGVtIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICMxMTY4YmQKICAgICAgICAgICAgICAgIGNvbG9yICNmZmZmZmYKICAgICAgICAgICAgfQoKICAgICAgICAgICAgZWxlbWVudCAiQ29udGFpbmVyIiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICM0MzhkZDUKICAgICAgICAgICAgICAgIGNvbG9yICNmZmZmZmYKICAgICAgICAgICAgfQoKICAgICAgICAgICAgZWxlbWVudCAiQ29tcG9uZW50IiB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICM4NWJiZjAKICAgICAgICAgICAgICAgIGNvbG9yICMwMDAwMDAKICAgICAgICAgICAgfQoKICAgICAgICAgICAgZWxlbWVudCAiRGF0YWJhc2UiIHsKICAgICAgICAgICAgICAgIHNoYXBlIEN5bGluZGVyCiAgICAgICAgICAgIH0KICAgICAgICB9CiAgICB9Cn0=",
+    "structurizr.inspection.info" : "0",
+    "structurizr.inspection.ignore" : "0",
+    "structurizr.inspection.warning" : "0"
+  },
+  "views" : {
+    "componentViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "containerId" : "3",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalContainerBoundariesVisible" : false,
+      "key" : "C3_Componentes",
+      "name" : "Component View: Vehicle Cache Lab - Vehicle API",
+      "order" : 3,
+      "relationships" : [ {
+        "id" : "17"
+      }, {
+        "id" : "18"
+      }, {
+        "id" : "19"
+      }, {
+        "id" : "20"
+      }, {
+        "id" : "21"
+      }, {
+        "id" : "22"
+      }, {
+        "id" : "23"
+      }, {
+        "id" : "24"
+      }, {
+        "id" : "25"
+      }, {
+        "id" : "26"
+      }, {
+        "id" : "27"
+      } ]
+    } ],
+    "configuration" : {
+      "styles" : {
+        "elements" : [ {
+          "background" : "#85bbf0",
+          "color" : "#000000",
+          "tag" : "Component"
+        }, {
+          "background" : "#438dd5",
+          "color" : "#ffffff",
+          "tag" : "Container"
+        }, {
+          "shape" : "Cylinder",
+          "tag" : "Database"
+        }, {
+          "background" : "#08427b",
+          "color" : "#ffffff",
+          "shape" : "Person",
+          "tag" : "Person"
+        }, {
+          "background" : "#1168bd",
+          "color" : "#ffffff",
+          "tag" : "Software System"
+        } ]
+      },
+      "terminology" : { }
+    },
+    "containerViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "11",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "12",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "externalSoftwareSystemBoundariesVisible" : false,
+      "key" : "C2_Containers",
+      "name" : "Container View: Vehicle Cache Lab",
+      "order" : 2,
+      "relationships" : [ {
+        "id" : "13"
+      }, {
+        "id" : "15"
+      }, {
+        "id" : "16"
+      } ],
+      "softwareSystemId" : "2"
+    } ],
+    "systemContextViews" : [ {
+      "automaticLayout" : {
+        "edgeSeparation" : 50,
+        "nodeSeparation" : 50,
+        "rankDirection" : "LeftRight",
+        "rankSeparation" : 100,
+        "vertices" : true
+      },
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "enterpriseBoundaryVisible" : true,
+      "key" : "C1_Contexto",
+      "name" : "System Context View: Vehicle Cache Lab",
+      "order" : 1,
+      "relationships" : [ {
+        "id" : "14"
+      } ],
+      "softwareSystemId" : "2"
+    } ]
+  }
+}
